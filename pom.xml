@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- <? ?>는 XML 파서에게 정보를 전달하는 특수 태그 -->
+
 <!-- 
     pom.xml: Maven 프로젝트 설정 파일
     이 파일이 있어야 Maven이 프로젝트를 인식하고 빌드할 수 있습니다.
@@ -7,6 +9,23 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
          https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         <!-- project 태그: XML 파일은 반드시 하나의 루트 태그를 가지며
+          project가 pom.xml의 루트 태그
+          모든 태그는 <project> 태그 안에 들어감
+          전체 설정의 컨테이너-->
+
+         <!-- xmlns(XML Name Space): 태그의 네임스페이스를 지정
+         "http://maven.apache.org/POM/4.0.0": Maven POM 네임스페이스 식별자
+         이 XML이 Maven POM 형식임을 표시 -->
+
+         <!-- xsi: XML Schema Instance의 위치를 지정
+         "http://www.w3.org/2001/XMLSchema-instance": W3C 표준 네임스페이스
+         XML 스키마 검증 기능 사용
+         xsi:schemaLocation 속성을 사용하기 위해 선언해야함 -->
+
+         <!-- xsi:schemaLocation: XML Schema Instance의 위치를 지정 
+         스키마 위치 지정-->
+
     
     <!-- Maven 프로젝트 모델 버전 (거의 항상 4.0.0) -->
     <modelVersion>4.0.0</modelVersion>
@@ -22,7 +41,14 @@
         <version>3.3.0</version>
         <relativePath/>
     </parent>
-    
+    <!-- parent 태그: 부모 프로젝트 설정
+    부모 POM을 상속받아 부모의 설정(의존성 버전, 플러그인 설정 등)을 자동으로 가져옴
+    중복 설정을 줄이고, 버전 관리와 일관성을 유지하기 위해서 가져옴-->
+    <!-- groupId: 부모 프로젝트의 그룹 ID(부모 POM을 식별하는 주소의 일부)-->
+    <!-- artifactId: 부모 프로젝트의 아티팩트 ID(부모 프로젝트의 이름)-->
+    <!-- version: 부모 프로젝트의 버전-->
+    <!-- relativePath: 부모 프로젝트의 상대 경로(값이 비어있으면 Maven 중앙 저장소에서 찾음)-->
+
     <!-- 프로젝트 정보 -->
     <groupId>com.example</groupId>        <!-- 프로젝트 그룹 (보통 도메인을 거꾸로) -->
     <artifactId>board-app</artifactId>    <!-- 프로젝트 이름 -->
