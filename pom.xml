@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+    pom.xml: Maven 프로젝트 설정 파일
+    이 파일이 있어야 Maven이 프로젝트를 인식하고 빌드할 수 있습니다.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    
+    <!-- Maven 프로젝트 모델 버전 (거의 항상 4.0.0) -->
+    <modelVersion>4.0.0</modelVersion>
+    
+    <!-- 
+        Spring Boot 부모 프로젝트 설정
+        이걸 상속받으면 Spring Boot 관련 설정을 자동으로 해줍니다.
+        예: Spring Boot 버전, 기본 의존성 버전 등
+    -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.0</version>
+        <relativePath/>
+    </parent>
+    
+    <!-- 프로젝트 정보 -->
+    <groupId>com.example</groupId>        <!-- 프로젝트 그룹 (보통 도메인을 거꾸로) -->
+    <artifactId>board-app</artifactId>    <!-- 프로젝트 이름 -->
+    <version>0.0.1-SNAPSHOT</version>     <!-- 프로젝트 버전 (SNAPSHOT = 개발 중) -->
+    <name>board-app</name>                <!-- 프로젝트 표시 이름 -->
+    <description>Spring Boot 게시판 프로젝트</description>
+    
+    <!-- Java 버전 설정 -->
+    <properties>
+        <java.version>17</java.version>   <!-- Java 17 사용 -->
+    </properties>
+    
+    <!-- 
+        의존성 (Dependencies)
+        프로젝트에서 사용할 라이브러리들을 여기에 선언합니다.
+        Maven이 자동으로 다운로드하고 관리해줍니다.
+    -->
+    <dependencies>
+        <!-- 
+            Spring Boot Web Starter
+            웹 애플리케이션을 만들기 위한 기본 라이브러리들
+            - Spring MVC (웹 프레임워크)
+            - 내장 Tomcat 서버
+            - JSON 처리 등
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        
+        <!-- 
+            Spring Boot Data JPA
+            데이터베이스와 연동하기 위한 라이브러리
+            - JPA (Java Persistence API)
+            - Hibernate (JPA 구현체)
+            - 데이터베이스 연결 관리
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        
+        <!-- 
+            MySQL Connector
+            MySQL 데이터베이스와 연결하기 위한 드라이버
+        -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>  <!-- 런타임에만 필요 (컴파일 시에는 불필요) -->
+        </dependency>
+        
+        <!-- 
+            Thymeleaf
+            HTML 템플릿 엔진 (서버에서 HTML을 동적으로 생성)
+            - HTML 파일에 Java 변수를 넣을 수 있음
+            - 예: ${board.title} 같은 문법 사용 가능
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+        
+        <!-- 
+            Lombok
+            보일러플레이트 코드를 줄여주는 라이브러리
+            - @Getter, @Setter, @Builder 등 어노테이션으로 코드 자동 생성
+            - 예: @Getter만 붙이면 getter 메서드 자동 생성
+        -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>  <!-- 선택적 의존성 -->
+        </dependency>
+        
+        <!-- 
+            Spring Boot Test
+            테스트를 위한 라이브러리
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>  <!-- 테스트 시에만 필요 -->
+        </dependency>
+    </dependencies>
+    
+    <!-- 빌드 설정 -->
+    <build>
+        <plugins>
+            <!-- 
+                Maven Compiler Plugin
+                Java 코드를 컴파일하는 플러그인
+                Lombok과 함께 사용하기 위한 설정 포함
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>17</source>      <!-- 소스 코드 Java 버전 -->
+                    <target>17</target>     <!-- 컴파일 결과물 Java 버전 -->
+                    <!-- Lombok 어노테이션 처리기 설정 -->
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            
+            <!-- 
+                Spring Boot Maven Plugin
+                Spring Boot 애플리케이션을 실행하고 패키징하는 플러그인
+                - mvn spring-boot:run 명령어로 서버 실행 가능
+                - 실행 가능한 JAR 파일 생성
+            -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+

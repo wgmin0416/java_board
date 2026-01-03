@@ -1,0 +1,8 @@
+/Users/wgmin/workspace/java_study/src/main/java/com/example/board/BoardApplication.java
+/Users/wgmin/workspace/java_study/src/main/java/com/example/board/controller/BoardController.java
+/Users/wgmin/workspace/java_study/src/main/java/com/example/board/controller/HomeController.java
+/Users/wgmin/workspace/java_study/src/main/java/com/example/board/dto/BoardRequest.java
+/Users/wgmin/workspace/java_study/src/main/java/com/example/board/dto/BoardResponse.java
+/Users/wgmin/workspace/java_study/src/main/java/com/example/board/entity/Board.java
+/Users/wgmin/workspace/java_study/src/main/java/com/example/board/repository/BoardRepository.java
+/Users/wgmin/workspace/java_study/src/main/java/com/example/board/service/BoardService.java

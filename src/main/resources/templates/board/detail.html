@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- 
+        th:text="${board.title}"
+        - 페이지 제목을 게시글 제목으로 설정
+        - 브라우저 탭에 표시됨
+    -->
+    <title th:text="${board.title}">게시글 상세</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>게시글 상세</h1>
+        <div class="header-actions">
+          <a th:href="@{/boards}" class="btn btn-secondary">목록</a>
+          <a th:href="@{/boards/{id}/edit(id=${board.id})}" class="btn btn-edit"
+            >수정</a
+          >
+          <!-- 삭제 폼 -->
+          <form
+            th:action="@{/boards/{id}/delete(id=${board.id})}"
+            method="post"
+            style="display: inline"
+            onsubmit="return confirm('정말 삭제하시겠습니까?');"
+          >
+            <button type="submit" class="btn btn-delete">삭제</button>
+          </form>
+        </div>
+      </header>
+
+      <div class="board-detail">
+        <!-- 게시글 헤더 (제목, 작성자, 날짜) -->
+        <div class="detail-header">
+          <!-- 
+                    th:text="${board.title}"
+                    - 게시글 제목 출력
+                -->
+          <h2 th:text="${board.title}"></h2>
+          <div class="detail-meta">
+            <span>작성자: <strong th:text="${board.author}"></strong></span>
+            <!-- 
+                        ${#temporals.format(board.createdAt, 'yyyy-MM-dd HH:mm:ss')}
+                        - 작성일시를 "2026-01-03 12:30:45" 형식으로 출력
+                    -->
+            <span
+              >작성일:
+              <strong
+                th:text="${#temporals.format(board.createdAt, 'yyyy-MM-dd HH:mm:ss')}"
+              ></strong
+            ></span>
+            <!-- 
+                        th:if="${board.updatedAt != null}"
+                        - 수정일시가 있으면 표시 (수정한 게시글만)
+                    -->
+            <span th:if="${board.updatedAt != null}">
+              수정일:
+              <strong
+                th:text="${#temporals.format(board.updatedAt, 'yyyy-MM-dd HH:mm:ss')}"
+              ></strong>
+            </span>
+          </div>
+        </div>
+        <!-- 게시글 내용 -->
+        <div class="detail-content">
+          <!-- 
+                    <pre>: 공백과 줄바꿈을 그대로 표시
+                    th:text="${board.content}"
+                    - 게시글 내용 출력
+                    - 줄바꿈이 그대로 유지됨
+                -->
+          <pre th:text="${board.content}"></pre>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

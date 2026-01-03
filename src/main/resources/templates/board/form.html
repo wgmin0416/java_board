@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- 
+        th:text="${id != null ? '게시글 수정' : '게시글 작성'}"
+        - 삼항 연산자: id가 있으면 "수정", 없으면 "작성"
+        - 작성 모드와 수정 모드를 구분
+    -->
+    <title th:text="${id != null ? '게시글 수정' : '게시글 작성'}">
+      게시글 작성
+    </title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1 th:text="${id != null ? '게시글 수정' : '게시글 작성'}">
+          게시글 작성
+        </h1>
+        <a th:href="@{/boards}" class="btn btn-secondary">목록</a>
+      </header>
+
+      <div class="board-form">
+        <!-- 
+                th:action="${id != null ? '/boards/' + id : '/boards'}"
+                - 수정 모드: POST /boards/1
+                - 작성 모드: POST /boards
+                
+                method="post"
+                - 폼 제출 방식 (POST)
+            -->
+        <!-- 
+          th:object="${board}"
+          - 폼 객체 지정
+          - 이 폼은 BoardRequest 객체와 바인딩됨
+          - th:field를 사용하려면 반드시 th:object가 필요합니다!
+        -->
+        <form
+          th:action="${id != null ? '/boards/' + id : '/boards'}"
+          method="post"
+          th:object="${board}"
+        >
+          <div class="form-group">
+            <label for="title">제목</label>
+            <!-- 
+                        th:field="*{title}"
+                        - th:object로 지정한 객체의 title 필드와 연결
+                        - *{}: 선택 변수 표현식 (th:object의 필드 참조)
+                        - 자동으로 name="title", value="${board.title}" 설정
+                    -->
+            <input
+              type="text"
+              id="title"
+              name="title"
+              th:field="*{title}"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="author">작성자</label>
+            <input
+              type="text"
+              id="author"
+              name="author"
+              th:field="*{author}"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="content">내용</label>
+            <!-- 
+                        th:field="*{content}"
+                        - textarea도 동일하게 바인딩
+                    -->
+            <textarea
+              id="content"
+              name="content"
+              rows="15"
+              th:field="*{content}"
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-actions">
+            <!-- 
+                        th:text="${id != null ? '수정' : '작성'}"
+                        - 버튼 텍스트를 모드에 따라 변경
+                    -->
+            <button
+              type="submit"
+              class="btn btn-primary"
+              th:text="${id != null ? '수정' : '작성'}"
+            >
+              작성
+            </button>
+            <a th:href="@{/boards}" class="btn btn-secondary">취소</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>
