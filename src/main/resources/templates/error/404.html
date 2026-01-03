@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <!-- 
+    xmlns:th="http://www.thymeleaf.org"
+    - Thymeleaf 네임스페이스 선언
+    - th: 접두사를 사용할 수 있게 해줌
+  -->
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>404 - 페이지를 찾을 수 없습니다</title>
+    <!-- CSS 파일 연결 -->
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="error-page">
+        <!-- 에러 코드 -->
+        <div class="error-code">404</div>
+        
+        <!-- 에러 메시지 -->
+        <h1 class="error-title">페이지를 찾을 수 없습니다</h1>
+        
+        <p class="error-message">
+          요청하신 페이지가 존재하지 않거나 이동되었을 수 있습니다.
+        </p>
+        
+        <!-- 에러 상세 정보 (개발 환경에서만 표시) -->
+        <div class="error-details" th:if="${status}">
+          <p><strong>상태 코드:</strong> <span th:text="${status}">404</span></p>
+          <p th:if="${error}"><strong>에러:</strong> <span th:text="${error}">Not Found</span></p>
+          <p th:if="${message}"><strong>메시지:</strong> <span th:text="${message}"></span></p>
+        </div>
+        
+        <!-- 액션 버튼 -->
+        <div class="error-actions">
+          <a th:href="@{/boards}" class="btn btn-primary">게시판 목록으로</a>
+          <a th:href="@{/}" class="btn btn-secondary">홈으로</a>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+

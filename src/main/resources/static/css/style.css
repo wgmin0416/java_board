@@ -342,3 +342,87 @@ table tbody tr td a:hover {
     }
 }
 
+/* 에러 페이지 스타일 */
+.error-page {
+    text-align: center;
+    padding: 60px 20px;
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.error-code {
+    font-size: 8rem;
+    font-weight: bold;
+    color: #e74c3c;
+    line-height: 1;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.error-title {
+    font-size: 2rem;
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+.error-message {
+    font-size: 1.1rem;
+    color: #7f8c8d;
+    margin-bottom: 40px;
+    max-width: 600px;
+}
+
+.error-details {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 5px;
+    margin-bottom: 40px;
+    text-align: left;
+    max-width: 600px;
+    width: 100%;
+}
+
+.error-details p {
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.error-details strong {
+    color: #2c3e50;
+    margin-right: 10px;
+}
+
+.error-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+    .error-code {
+        font-size: 5rem;
+    }
+
+    .error-title {
+        font-size: 1.5rem;
+    }
+
+    .error-message {
+        font-size: 1rem;
+    }
+
+    .error-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .error-actions .btn {
+        width: 100%;
+    }
+}
+

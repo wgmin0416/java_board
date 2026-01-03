@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <!-- 
+    일반적인 에러 페이지
+    - 특정 에러 코드에 해당하는 페이지가 없을 때 사용
+    - Spring Boot가 자동으로 이 페이지를 사용
+  -->
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>에러 발생</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="error-page">
+        <!-- 
+          th:if="${status}": status가 있으면 에러 코드 표시
+          th:text="${status}": HTTP 상태 코드 출력
+        -->
+        <div class="error-code" th:if="${status}" th:text="${status}">에러</div>
+        <div class="error-code" th:unless="${status}">에러</div>
+        
+        <h1 class="error-title">오류가 발생했습니다</h1>
+        <p class="error-message">
+          요청을 처리하는 중 문제가 발생했습니다.
+        </p>
+        
+        <div class="error-details" th:if="${status}">
+          <p><strong>상태 코드:</strong> <span th:text="${status}"></span></p>
+          <p th:if="${error}"><strong>에러:</strong> <span th:text="${error}"></span></p>
+          <p th:if="${message}"><strong>메시지:</strong> <span th:text="${message}"></span></p>
+          <p th:if="${path}"><strong>경로:</strong> <span th:text="${path}"></span></p>
+        </div>
+        
+        <div class="error-actions">
+          <a th:href="@{/boards}" class="btn btn-primary">게시판 목록으로</a>
+          <a th:href="@{/}" class="btn btn-secondary">홈으로</a>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+

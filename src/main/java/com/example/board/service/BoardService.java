@@ -7,8 +7,10 @@ import com.example.board.repository.BoardRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * BoardService: 게시판 비즈니스 로직 처리 계층
@@ -85,16 +87,19 @@ public class BoardService {
      * 
      * @param id 조회할 게시글 번호
      * @return 게시글 정보
-     * @throws RuntimeException 게시글을 찾을 수 없을 때
+     * @throws ResponseStatusException 게시글을 찾을 수 없을 때 (404 NOT_FOUND)
      */
     @Transactional(readOnly = true)  // 읽기 전용 (성능 최적화)
     public BoardResponse getBoard(Long id) {
         // findById()는 Optional<Board>를 반환
         // Optional: 값이 있을 수도 있고 없을 수도 있음을 표현
         Board board = boardRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다: " + id));
-        // orElseThrow(): 값이 없으면 예외를 던짐
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, 
+                        "게시글을 찾을 수 없습니다: " + id));
+        // orElseThrow(): 값이 없으면 404 NOT_FOUND 예외를 던짐
         // 값이 있으면 Board 객체 반환
+        // ResponseStatusException: Spring이 HTTP 상태 코드를 자동으로 처리해줌
         
         return BoardResponse.from(board);
     }
@@ -134,12 +139,14 @@ public class BoardService {
      * @param id 수정할 게시글 번호
      * @param request 수정할 내용 (제목, 내용)
      * @return 수정된 게시글 정보
-     * @throws RuntimeException 게시글을 찾을 수 없을 때
+     * @throws ResponseStatusException 게시글을 찾을 수 없을 때 (404 NOT_FOUND)
      */
     public BoardResponse updateBoard(Long id, BoardRequest request) {
         // 1. 기존 게시글 조회
         Board board = boardRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다: " + id));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, 
+                        "게시글을 찾을 수 없습니다: " + id));
         
         // 2. 게시글 수정
         // Entity의 update() 메서드 호출
@@ -158,8 +165,16 @@ public class BoardService {
      * 게시글 삭제
      * 
      * @param id 삭제할 게시글 번호
+     * @throws ResponseStatusException 게시글을 찾을 수 없을 때 (404 NOT_FOUND)
      */
     public void deleteBoard(Long id) {
+        // 게시글이 존재하는지 먼저 확인
+        if (!boardRepository.existsById(id)) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, 
+                    "게시글을 찾을 수 없습니다: " + id);
+        }
+        
         // deleteById(): 데이터베이스에서 삭제
         // DELETE FROM boards WHERE id = ?
         boardRepository.deleteById(id);
