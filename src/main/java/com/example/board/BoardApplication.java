@@ -2,6 +2,7 @@ package com.example.board;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * BoardApplication: Spring Boot 애플리케이션의 시작점
@@ -24,6 +25,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  *   4. 웹 애플리케이션이 준비되어 요청을 받을 수 있게 됨
  */
 @SpringBootApplication
+@EnableScheduling  // 스케줄링 기능 활성화 (30초마다 동기화 워커 실행)
 public class BoardApplication {
 
     /**

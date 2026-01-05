@@ -3,7 +3,11 @@ package com.example.board.service;
 import com.example.board.dto.BoardRequest;
 import com.example.board.dto.BoardResponse;
 import com.example.board.entity.Board;
+import com.example.board.elasticsearch.BoardDocument;
+import com.example.board.elasticsearch.BoardSearchRepository;
+import com.example.board.event.BoardSyncEvent;
 import com.example.board.repository.BoardRepository;
+import com.example.board.worker.BoardSyncEventQueue;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +15,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.stream.Collectors;
+import java.util.List;
 
 /**
  * BoardService: 게시판 비즈니스 로직 처리 계층
@@ -50,6 +57,19 @@ public class BoardService {
     private final BoardRepository boardRepository;
     
     /**
+     * BoardSearchRepository: Elasticsearch 데이터 접근 계층
+     * - 검색 기능에 사용
+     */
+    private final BoardSearchRepository boardSearchRepository;
+    
+    /**
+     * BoardSyncEventQueue: 이벤트 큐
+     * - 게시글 생성/수정/삭제 시 이벤트를 큐에 추가
+     * - 스케줄러 워커가 주기적으로 큐를 확인하고 Elasticsearch에 동기화
+     */
+    private final BoardSyncEventQueue eventQueue;
+    
+    /**
      * 게시글 작성
      * 
      * @Transactional: 이 메서드가 트랜잭션 안에서 실행됨
@@ -73,7 +93,11 @@ public class BoardService {
         // @PrePersist가 실행되어 createdAt, updatedAt이 자동 설정됨
         Board savedBoard = boardRepository.save(board);
         
-        // 3. Entity를 DTO로 변환해서 반환
+        // 3. Elasticsearch 동기화 이벤트 발행
+        // 이벤트를 큐에 추가 (스케줄러 워커가 30초마다 처리)
+        eventQueue.addEvent(BoardSyncEvent.create(savedBoard.getId()));
+        
+        // 4. Entity를 DTO로 변환해서 반환
         // Controller는 Entity를 직접 받지 않고 DTO를 받음
         return BoardResponse.from(savedBoard);
     }
@@ -157,7 +181,10 @@ public class BoardService {
         // save()는 새로운 데이터면 INSERT, 기존 데이터면 UPDATE
         Board updatedBoard = boardRepository.save(board);
         
-        // 4. DTO로 변환해서 반환
+        // 4. Elasticsearch 동기화 이벤트 발행
+        eventQueue.addEvent(BoardSyncEvent.update(updatedBoard.getId()));
+        
+        // 5. DTO로 변환해서 반환
         return BoardResponse.from(updatedBoard);
     }
     
@@ -178,6 +205,61 @@ public class BoardService {
         // deleteById(): 데이터베이스에서 삭제
         // DELETE FROM boards WHERE id = ?
         boardRepository.deleteById(id);
+        
+        // Elasticsearch 동기화 이벤트 발행
+        eventQueue.addEvent(BoardSyncEvent.delete(id));
+    }
+    
+    /**
+     * 게시글 검색 (Elasticsearch 사용)
+     * 
+     * @param keyword 검색 키워드
+     * @param searchType 검색 타입 (title, content, title+content, author)
+     * @param pageable 페이징 정보
+     * @return 페이징된 검색 결과
+     */
+    @Transactional(readOnly = true)
+    public Page<BoardResponse> searchBoards(String keyword, String searchType, Pageable pageable) {
+        Page<BoardDocument> documents;
+        
+        switch (searchType) {
+            case "title":
+                // 제목으로 검색
+                documents = boardSearchRepository.findByTitleContaining(keyword, pageable);
+                break;
+                
+            case "content":
+                // 내용으로 검색
+                documents = boardSearchRepository.findByContentContaining(keyword, pageable);
+                break;
+                
+            case "title+content":
+                // 제목 또는 내용으로 검색
+                documents = boardSearchRepository.findByTitleContainingOrContentContaining(keyword, pageable);
+                break;
+                
+            case "author":
+                // 작성자로 검색
+                documents = boardSearchRepository.findByAuthor(keyword, pageable);
+                break;
+                
+            default:
+                // 기본값: 제목 또는 내용으로 검색
+                documents = boardSearchRepository.findByTitleContainingOrContentContaining(keyword, pageable);
+        }
+        
+        // BoardDocument를 BoardResponse로 변환
+        // Elasticsearch에서 검색된 결과를 직접 사용 (MySQL 조회 없이)
+        List<BoardResponse> boardResponses = documents.getContent().stream()
+                .map(BoardResponse::from)  // BoardDocument를 BoardResponse로 변환
+                .collect(Collectors.toList());
+        
+        // Page 객체 재생성 (변환된 리스트로)
+        return new org.springframework.data.domain.PageImpl<>(
+                boardResponses,
+                pageable,
+                documents.getTotalElements()
+        );
     }
 }
 

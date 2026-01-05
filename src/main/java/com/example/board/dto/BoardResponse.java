@@ -1,6 +1,7 @@
 package com.example.board.dto;
 
 import com.example.board.entity.Board;
+import com.example.board.elasticsearch.BoardDocument;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -57,6 +58,25 @@ public class BoardResponse {
                 .createdAt(board.getCreatedAt()) // Entity의 createdAt을 DTO의 createdAt으로 복사
                 .updatedAt(board.getUpdatedAt()) // Entity의 updatedAt을 DTO의 updatedAt으로 복사
                 .build();                        // Builder 패턴으로 객체 생성
+    }
+    
+    /**
+     * Elasticsearch Document를 Response DTO로 변환하는 정적 메서드
+     * 
+     * 검색 기능에서 Elasticsearch의 검색 결과를 직접 사용하기 위해 추가
+     * 
+     * @param document 변환할 BoardDocument
+     * @return BoardResponse DTO 객체
+     */
+    public static BoardResponse from(BoardDocument document) {
+        return BoardResponse.builder()
+                .id(document.getId())
+                .title(document.getTitle())
+                .content(document.getContent())
+                .author(document.getAuthor())
+                .createdAt(document.getCreatedAt())
+                .updatedAt(document.getUpdatedAt())
+                .build();
     }
 }
 

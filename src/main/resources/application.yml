@@ -45,6 +45,15 @@ spring:
     mode: HTML # HTML 모드
     encoding: UTF-8 # 인코딩 방식
 
+  # Elasticsearch 설정
+  elasticsearch:
+    # Elasticsearch 서버 연결 정보
+    uris: http://localhost:9200 # Elasticsearch 서버 주소 (Docker로 실행 중)
+    # 연결 타임아웃
+    connection-timeout: 5s
+    # 소켓 타임아웃
+    socket-timeout: 60s
+
 # 서버 설정
 server:
   port: 8081 # 서버가 실행될 포트 번호

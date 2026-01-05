@@ -30,6 +30,42 @@
         <a th:href="@{/boards/new}" class="btn btn-primary">글쓰기</a>
       </header>
 
+      <!-- 검색 폼 -->
+      <div class="search-form">
+        <form th:action="@{/boards}" method="get" class="search-container">
+          <div class="search-input-group">
+            <!-- 검색 타입 선택 -->
+            <select name="searchType" class="search-type-select">
+              <option value="title" th:selected="${searchType == 'title'}">제목</option>
+              <option value="content" th:selected="${searchType == 'content'}">내용</option>
+              <option value="title+content" th:selected="${searchType == 'title+content' or searchType == null}">제목+내용</option>
+              <option value="author" th:selected="${searchType == 'author'}">작성자</option>
+            </select>
+            
+            <!-- 검색 키워드 입력 -->
+            <input 
+              type="text" 
+              name="keyword" 
+              placeholder="검색어를 입력하세요" 
+              class="search-input"
+              th:value="${keyword}"
+            />
+            
+            <!-- 검색 버튼 -->
+            <button type="submit" class="btn btn-search">검색</button>
+            
+            <!-- 검색 초기화 버튼 (검색 중일 때만 표시) -->
+            <a 
+              th:if="${keyword != null and !keyword.isEmpty()}" 
+              th:href="@{/boards}" 
+              class="btn btn-secondary"
+            >
+              초기화
+            </a>
+          </div>
+        </form>
+      </div>
+
       <!-- 게시글 목록 테이블 -->
       <div class="board-list">
         <table>
@@ -147,7 +183,7 @@
                 -->
           <a
             th:if="${boards.hasPrevious()}"
-            th:href="@{/boards(page=${boards.number - 1})}"
+            th:href="@{/boards(page=${boards.number - 1}, keyword=${keyword}, searchType=${searchType})}"
             class="page-arrow"
             >‹</a
           >
@@ -180,7 +216,7 @@
                         -->
               <a
                 th:if="${pageNum == boards.number}"
-                th:href="@{/boards(page=${pageNum})}"
+                th:href="@{/boards(page=${pageNum}, keyword=${keyword}, searchType=${searchType})}"
                 class="page-number active"
                 th:text="${pageNum + 1}"
               ></a>
@@ -190,7 +226,7 @@
                         -->
               <a
                 th:unless="${pageNum == boards.number}"
-                th:href="@{/boards(page=${pageNum})}"
+                th:href="@{/boards(page=${pageNum}, keyword=${keyword}, searchType=${searchType})}"
                 class="page-number"
                 th:text="${pageNum + 1}"
               ></a>
@@ -200,7 +236,7 @@
           <!-- 다음 페이지 화살표 -->
           <a
             th:if="${boards.hasNext()}"
-            th:href="@{/boards(page=${boards.number + 1})}"
+            th:href="@{/boards(page=${boards.number + 1}, keyword=${keyword}, searchType=${searchType})}"
             class="page-arrow"
             >›</a
           >

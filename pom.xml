@@ -133,6 +133,19 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>  <!-- 테스트 시에만 필요 -->
         </dependency>
+
+
+        <!-- 
+            Spring Boot Data Elasticsearch
+            Elasticsearch와 연동하기 위한 라이브러리
+            - Spring Data Elasticsearch: Spring Data의 Elasticsearch 지원
+            - Elasticsearch: Elasticsearch 클라이언트 라이브러리
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-elasticsearch</artifactId>
+        </dependency>
+        
     </dependencies>
     
     <!-- 빌드 설정 -->

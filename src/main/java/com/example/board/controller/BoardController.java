@@ -59,9 +59,22 @@ public class BoardController {
     @GetMapping
     public String getAllBoards(
             @PageableDefault(size = 10) Pageable pageable,
+            @RequestParam(required = false) String keyword,  // 검색 키워드 (선택적)
+            @RequestParam(required = false, defaultValue = "title+content") String searchType,  // 검색 타입 (기본값: title+content)
             Model model) {
-        // Service에서 페이징된 게시글 목록 가져오기
-        Page<BoardResponse> boards = boardService.getAllBoards(pageable);
+        
+        Page<BoardResponse> boards;
+        
+        // 검색 키워드가 있으면 검색, 없으면 전체 목록
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            // Elasticsearch로 검색
+            boards = boardService.searchBoards(keyword.trim(), searchType, pageable);
+            model.addAttribute("keyword", keyword);
+            model.addAttribute("searchType", searchType);
+        } else {
+            // 전체 목록 조회
+            boards = boardService.getAllBoards(pageable);
+        }
         
         // Model에 데이터 추가 (뷰로 전달)
         model.addAttribute("boards", boards);           // 게시글 목록
