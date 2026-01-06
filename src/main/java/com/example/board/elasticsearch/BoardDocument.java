@@ -8,6 +8,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.WriteTypeHint;
 
 import java.time.LocalDateTime;
 
@@ -20,12 +21,16 @@ import java.time.LocalDateTime;
  * 
  * 인덱스(Index): Elasticsearch의 데이터베이스 개념
  * - boards: 인덱스 이름
+ * 
+ * writeTypeHint = WriteTypeHint.FALSE: _class 필드 제거
+ * - Spring Data Elasticsearch가 기본적으로 추가하는 타입 힌트 필드를 제거
+ * - 역직렬화 시 UnrecognizedPropertyException 방지
  */
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(indexName = "boards")
+@Document(indexName = "boards", writeTypeHint = WriteTypeHint.FALSE)
 public class BoardDocument {
     
     /**
@@ -60,14 +65,21 @@ public class BoardDocument {
     /**
      * 작성일시
      * - type = FieldType.Date: 날짜 타입
+     * - format = {}: 기본 포맷 사용 안 함
+     * - pattern: 날짜+시간 포맷 지정 (ISO 8601 형식)
+     *   - "yyyy-MM-dd'T'HH:mm:ss": 날짜+시간 형식
+     *   - "||epoch_millis": 밀리초 타임스탬프도 지원
+     *   예: "2026-01-03T14:30:45"
      */
-    @Field(type = FieldType.Date)
+    @Field(type = FieldType.Date, format = {}, pattern = "yyyy-MM-dd'T'HH:mm:ss||epoch_millis")
     private LocalDateTime createdAt;
     
     /**
      * 수정일시
+     * - format = {}: 기본 포맷 사용 안 함
+     * - pattern: 날짜+시간 포맷 지정 (ISO 8601 형식)
      */
-    @Field(type = FieldType.Date)
+    @Field(type = FieldType.Date, format = {}, pattern = "yyyy-MM-dd'T'HH:mm:ss||epoch_millis")
     private LocalDateTime updatedAt;
 }
 

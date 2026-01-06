@@ -54,6 +54,15 @@ spring:
     # 소켓 타임아웃
     socket-timeout: 60s
 
+# 커스텀 설정
+board:
+  elasticsearch:
+    # Elasticsearch 인덱스 초기화 설정
+    # true: 애플리케이션 시작 시 기존 인덱스를 삭제하고 재생성 후 MySQL 데이터 동기화
+    # false: 초기화를 실행하지 않음 (기본값)
+    # 주의: true로 설정하면 기존 Elasticsearch 데이터가 모두 삭제됩니다!
+    sync-on-startup: false
+
 # 서버 설정
 server:
   port: 8081 # 서버가 실행될 포트 번호

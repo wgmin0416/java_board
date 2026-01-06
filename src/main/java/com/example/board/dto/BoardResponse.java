@@ -63,7 +63,9 @@ public class BoardResponse {
     /**
      * Elasticsearch Document를 Response DTO로 변환하는 정적 메서드
      * 
-     * 검색 기능에서 Elasticsearch의 검색 결과를 직접 사용하기 위해 추가
+     * Elasticsearch에서 검색된 결과를 바로 사용할 때 사용
+     * - MySQL 조회 없이 Elasticsearch 결과를 직접 사용
+     * - 더 빠른 응답 시간
      * 
      * @param document 변환할 BoardDocument
      * @return BoardResponse DTO 객체

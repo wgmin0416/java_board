@@ -16,8 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.stream.Collectors;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * BoardService: 게시판 비즈니스 로직 처리 계층
@@ -248,8 +248,8 @@ public class BoardService {
                 documents = boardSearchRepository.findByTitleContainingOrContentContaining(keyword, pageable);
         }
         
-        // BoardDocument를 BoardResponse로 변환
-        // Elasticsearch에서 검색된 결과를 직접 사용 (MySQL 조회 없이)
+        // BoardDocument를 BoardResponse로 직접 변환
+        // Elasticsearch에 이미 모든 정보가 있으므로 MySQL 조회 불필요
         List<BoardResponse> boardResponses = documents.getContent().stream()
                 .map(BoardResponse::from)  // BoardDocument를 BoardResponse로 변환
                 .collect(Collectors.toList());
