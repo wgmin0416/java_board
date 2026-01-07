@@ -5,9 +5,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
-
 /**
  * BoardSearchRepository: Elasticsearch 데이터 접근 계층
  * 
