@@ -1,44 +1,75 @@
 package com.example.board.service;
 
-import com.example.board.dto.BoardRequest;
-import com.example.board.dto.BoardResponse;
-import com.example.board.entity.Board;
-import com.example.board.elasticsearch.BoardDocument;
-import com.example.board.elasticsearch.BoardSearchRepository;
-import com.example.board.event.BoardSyncEvent;
-import com.example.board.repository.BoardRepository;
-import com.example.board.worker.BoardSyncEventQueue;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
+// DTO: 계층 간 데이터 전달
+import com.example.board.dto.BoardRequest;   // 요청 DTO (사용자 입력)
+import com.example.board.dto.BoardResponse;  // 응답 DTO (조회 결과)
+// 엔티티와 Elasticsearch
+import com.example.board.entity.Board;                    // MySQL 엔티티
+import com.example.board.elasticsearch.BoardDocument;     // Elasticsearch 문서
+import com.example.board.elasticsearch.BoardSearchRepository; // Elasticsearch 저장소
+// 이벤트와 워커
+import com.example.board.event.BoardSyncEvent;      // 동기화 이벤트
+import com.example.board.repository.BoardRepository; // MySQL 저장소
+import com.example.board.worker.BoardSyncEventQueue;  // 이벤트 큐
+// Lombok
+import lombok.RequiredArgsConstructor;  // final 필드의 생성자 자동 생성
+// Spring Data: 페이징 관련
+import org.springframework.data.domain.Page;     // 페이징된 결과
+import org.springframework.data.domain.Pageable; // 페이징 정보
+// Spring: HTTP 상태 코드와 예외 처리
+import org.springframework.http.HttpStatus;  // HTTP 상태 코드 (예: 404 NOT_FOUND)
+import org.springframework.stereotype.Service;  // Service 계층 표시 어노테이션
+import org.springframework.transaction.annotation.Transactional; // 트랜잭션 관리 어노테이션
+import org.springframework.web.server.ResponseStatusException; // HTTP 예외
 
-import java.util.List;
-import java.util.stream.Collectors;
+// Java 표준 라이브러리
+import java.util.List;              // 리스트
+import java.util.stream.Collectors; // 스트림의 collect 메서드 사용
 
 /**
  * BoardService: 게시판 비즈니스 로직 처리 계층
  * 
  * Service 계층의 역할:
- * 1. 비즈니스 로직 처리 (게시글 작성 규칙, 권한 확인 등)
- * 2. 트랜잭션 관리 (여러 작업을 하나의 단위로 묶어서 처리)
- * 3. Entity ↔ DTO 변환
- * 4. 예외 처리
+ * 1. 비즈니스 로직 처리
+ *    - 게시글 작성 규칙 검증
+ *    - 권한 확인 (예: 본인만 수정 가능)
+ *    - 데이터 검증 및 변환
  * 
- * @Service: 이 클래스가 Service 계층임을 표시
- *           Spring이 이 클래스를 빈(Bean)으로 등록하고 관리
+ * 2. 트랜잭션 관리
+ *    - 여러 작업을 하나의 단위로 묶어서 처리
+ *    - 성공하면 모두 커밋, 실패하면 모두 롤백
+ *    - 예: 게시글 저장 + 이벤트 발행을 하나의 트랜잭션으로 처리
+ * 
+ * 3. Entity ↔ DTO 변환
+ *    - Controller는 DTO만 다루고 Entity는 모름
+ *    - Service가 Entity와 DTO를 변환하는 역할
+ *    - 예: BoardRequest → Board (저장 시)
+ *    - 예: Board → BoardResponse (조회 시)
+ * 
+ * 4. 예외 처리
+ *    - 비즈니스 로직 오류를 적절한 예외로 변환
+ *    - 예: 게시글 없음 → 404 NOT_FOUND 예외
+ * 
+ * @Service: 이 클래스가 Service 계층임을 표시하는 어노테이션
+ *           - Spring이 이 클래스를 빈(Bean)으로 등록하고 관리
+ *           - 다른 클래스에서 주입받아 사용 가능
+ *           - 예: BoardController에서 @RequiredArgsConstructor로 주입받음
  * 
  * @RequiredArgsConstructor: Lombok이 final 필드의 생성자를 자동 생성
- *                          의존성 주입(Dependency Injection)에 사용
- *                          예: private final BoardRepository boardRepository;
- *                              → 생성자에서 자동으로 주입됨
+ *                          - 의존성 주입(Dependency Injection)에 사용
+ *                          - 예: private final BoardRepository boardRepository;
+ *                              → public BoardService(BoardRepository boardRepository) { ... }
+ *                          - Spring이 이 생성자를 호출하면서 의존성을 주입
+ * 
+ * @Transactional: 이 클래스의 모든 메서드가 트랜잭션 안에서 실행됨
+ *                 - 트랜잭션: 여러 작업을 하나의 단위로 묶어서 처리
+ *                 - 성공하면 커밋 (데이터베이스에 저장)
+ *                 - 실패하면 롤백 (변경사항 취소)
+ *                 - 읽기 전용 메서드는 @Transactional(readOnly = true)로 최적화 가능
  */
-@Service
-@RequiredArgsConstructor  // final 필드의 생성자 자동 생성 (의존성 주입용)
-@Transactional             // 이 클래스의 모든 메서드가 트랜잭션 안에서 실행됨
+@Service                    // Service 계층 표시
+@RequiredArgsConstructor     // final 필드의 생성자 자동 생성 (의존성 주입용)
+@Transactional              // 이 클래스의 모든 메서드가 트랜잭션 안에서 실행됨
 public class BoardService {
     
     /**
@@ -72,33 +103,65 @@ public class BoardService {
     /**
      * 게시글 작성
      * 
-     * @Transactional: 이 메서드가 트랜잭션 안에서 실행됨
-     *                 - 성공하면 커밋 (데이터베이스에 저장)
-     *                 - 실패하면 롤백 (변경사항 취소)
+     * 트랜잭션:
+     * - @Transactional: 이 메서드가 트랜잭션 안에서 실행됨
+     *                   - 클래스 레벨에 @Transactional이 있어서 자동 적용됨
+     *                   - 성공하면 커밋 (데이터베이스에 저장)
+     *                   - 실패하면 롤백 (변경사항 취소)
+     *                   - 예: 저장 중 오류 발생 시 모든 변경사항 취소
+     * 
+     * 처리 순서:
+     * 1. DTO를 Entity로 변환
+     * 2. 데이터베이스에 저장 (MySQL)
+     * 3. Elasticsearch 동기화 이벤트 발행 (비동기)
+     * 4. Entity를 DTO로 변환해서 반환
      * 
      * @param request 게시글 작성 요청 데이터 (제목, 내용, 작성자)
-     * @return 작성된 게시글 정보
+     *                - Controller에서 @ModelAttribute로 받은 데이터
+     *                - BoardRequest DTO 객체
+     * 
+     * @return 작성된 게시글 정보 (BoardResponse DTO)
+     *         - 저장된 게시글의 모든 정보 포함 (id, title, content, author, createdAt, updatedAt)
+     *         - Controller에서 뷰에 전달할 데이터
+     * 
+     * 사용 예시:
+     * BoardRequest request = new BoardRequest();
+     * request.setTitle("제목");
+     * request.setContent("내용");
+     * request.setAuthor("작성자");
+     * BoardResponse response = boardService.createBoard(request);
      */
     public BoardResponse createBoard(BoardRequest request) {
         // 1. DTO를 Entity로 변환
         // Builder 패턴으로 Board 객체 생성
+        // Builder 패턴: 필드를 하나씩 설정하면서 객체를 만들 수 있음
         Board board = Board.builder()
                 .title(request.getTitle())      // 요청에서 제목 가져오기
                 .content(request.getContent())  // 요청에서 내용 가져오기
                 .author(request.getAuthor())   // 요청에서 작성자 가져오기
+                // id는 자동 생성되므로 설정하지 않음
+                // createdAt, updatedAt은 @PrePersist에서 자동 설정됨
                 .build();                       // Board 객체 생성
         
-        // 2. 데이터베이스에 저장
+        // 2. 데이터베이스에 저장 (MySQL)
         // save() 메서드가 INSERT 쿼리를 실행
+        // SQL: INSERT INTO boards (title, content, author, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?)
         // @PrePersist가 실행되어 createdAt, updatedAt이 자동 설정됨
+        // savedBoard: 저장된 Board 객체 (id가 자동 생성되어 포함됨)
         Board savedBoard = boardRepository.save(board);
         
         // 3. Elasticsearch 동기화 이벤트 발행
         // 이벤트를 큐에 추가 (스케줄러 워커가 30초마다 처리)
+        // BoardSyncEvent.create(): CREATE 타입의 이벤트 생성
+        // savedBoard.getId(): 저장된 게시글의 ID (자동 생성된 번호)
+        // 비동기 처리: 즉시 Elasticsearch에 저장하지 않고 큐에 추가만 함
+        // → 성능 향상 (동기화는 나중에 일괄 처리)
         eventQueue.addEvent(BoardSyncEvent.create(savedBoard.getId()));
         
         // 4. Entity를 DTO로 변환해서 반환
         // Controller는 Entity를 직접 받지 않고 DTO를 받음
+        // BoardResponse.from(): Entity를 DTO로 변환하는 정적 메서드
+        // → 뷰에 전달할 데이터 준비 완료
         return BoardResponse.from(savedBoard);
     }
     
@@ -106,25 +169,47 @@ public class BoardService {
      * 게시글 조회 (단건)
      * 
      * @Transactional(readOnly = true): 읽기 전용 트랜잭션
-     *                                 - 성능 최적화 (쓰기 작업이 없으므로)
-     *                                 - 데이터 변경 불가
+     *                                 - 읽기 전용으로 표시하여 성능 최적화
+     *                                 - 쓰기 작업이 없으므로 최적화 가능
+     *                                 - 데이터 변경 불가 (읽기만 가능)
+     *                                 - Hibernate가 변경 감지를 하지 않아 성능 향상
      * 
-     * @param id 조회할 게시글 번호
-     * @return 게시글 정보
-     * @throws ResponseStatusException 게시글을 찾을 수 없을 때 (404 NOT_FOUND)
+     * Optional이란?
+     * - 값이 있을 수도 있고 없을 수도 있음을 표현하는 클래스
+     * - null 체크를 명시적으로 처리할 수 있음
+     * - 예: Optional<Board> → Board 객체가 있거나 없거나
+     * 
+     * @param id 조회할 게시글 번호 (Long 타입)
+     *           - URL 경로에서 추출된 값
+     *           - 예: /boards/1 → id = 1L
+     * 
+     * @return 게시글 정보 (BoardResponse DTO)
+     *         - 조회된 게시글의 모든 정보 포함
+     * 
+     * @throws ResponseStatusException 게시글을 찾을 수 없을 때
+     *                                 - HTTP 상태 코드: 404 NOT_FOUND
+     *                                 - Spring이 자동으로 HTTP 응답으로 변환
+     *                                 - 뷰에서 404 에러 페이지 표시
+     * 
+     * 사용 예시:
+     * BoardResponse board = boardService.getBoard(1L);
+     * // board.getId(), board.getTitle() 등 사용 가능
      */
     @Transactional(readOnly = true)  // 읽기 전용 (성능 최적화)
     public BoardResponse getBoard(Long id) {
         // findById()는 Optional<Board>를 반환
         // Optional: 값이 있을 수도 있고 없을 수도 있음을 표현
+        // 예: 게시글이 있으면 Optional.of(board), 없으면 Optional.empty()
         Board board = boardRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, 
-                        "게시글을 찾을 수 없습니다: " + id));
-        // orElseThrow(): 값이 없으면 404 NOT_FOUND 예외를 던짐
-        // 값이 있으면 Board 객체 반환
+                        HttpStatus.NOT_FOUND,  // HTTP 404 상태 코드
+                        "게시글을 찾을 수 없습니다: " + id));  // 에러 메시지
+        // orElseThrow(): 값이 없으면 예외를 던짐
+        //                 값이 있으면 Board 객체 반환
         // ResponseStatusException: Spring이 HTTP 상태 코드를 자동으로 처리해줌
+        //                         Controller에서 별도 처리 없이 404 에러 페이지 표시
         
+        // Entity를 DTO로 변환해서 반환
         return BoardResponse.from(board);
     }
     
